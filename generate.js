@@ -2,7 +2,7 @@ import fetch from "node-fetch";
 import fs from "fs";
 
 const API_KEY = process.env.YOUTUBE_API_KEY;
-const CHANNEL_ID = "oishiakiko";
+const CHANNEL_ID = "UC7WTGZV5NNPCLJH9wc8e0xQ";
 
 const url =
   `https://www.googleapis.com/youtube/v3/search?` +
