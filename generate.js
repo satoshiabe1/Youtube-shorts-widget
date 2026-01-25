@@ -1,5 +1,5 @@
-import fetch from "node-fetch";
-import fs from "fs";
+const fetch = require("node-fetch");
+const fs = require("fs");
 
 const API_KEY = process.env.YOUTUBE_API_KEY;
 const CHANNEL_ID = "UC7WTGZV5NNPCLJH9wc8e0xQ";
