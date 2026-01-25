@@ -34,3 +34,11 @@ fetch(url)
     });
 
     html += `</div>`;
+
+    fs.writeFileSync("shorts.html", html);
+    console.log("shorts.html generated");
+  })
+  .catch(err => {
+    console.error("Error fetching YouTube data:", err);
+    process.exit(1);
+  });
