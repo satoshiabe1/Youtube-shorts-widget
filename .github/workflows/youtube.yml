@@ -2,7 +2,7 @@ name: Update Shorts
 
 on:
   schedule:
-    - cron: "*/30 * * * *"  # 30分ごと
+    - cron: "0 22 * * *" # JST 7:00
   workflow_dispatch:
 
 jobs:
