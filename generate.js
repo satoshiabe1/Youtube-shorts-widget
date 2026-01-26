@@ -31,7 +31,7 @@ fetch(url)
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-body { margin:0; padding:0; background:#000; }
+body { margin:0; padding:0; background: transparent; }
 
 .shorts-wrapper {
   display: grid;
@@ -45,7 +45,7 @@ body { margin:0; padding:0; background:#000; }
   aspect-ratio: 9 / 16;
   border-radius: 12px;
   overflow: hidden;
-  background: #000;
+  background: transparent;
 }
 
 .shorts-item iframe {
