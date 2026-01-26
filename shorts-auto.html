@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body {
+  margin: 0;
+  background: transparent;
+}
+
+.shorts-wrapper {
+  display: grid;
+  gap: 16px;
+  padding: 8px;
+}
+
+.shorts-item {
+  position: relative;
+  aspect-ratio: 9 / 16;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.shorts-item iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+/* PC */
+@media (min-width: 768px) {
+  .shorts-wrapper {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Mobile carousel */
+@media (max-width: 767px) {
+  .shorts-wrapper {
+    display: flex;
+    overflow-x: auto;
+    gap: 12px;
+    scroll-snap-type: x mandatory;
+  }
+  .shorts-item {
+    flex: 0 0 80%;
+    scroll-snap-align: start;
+  }
+}
+</style>
+</head>
+
+<body>
+<div id="shorts" class="shorts-wrapper"></div>
+
+<script>
+fetch("./shorts-data.json")
+  .then(res => res.json())
+  .then(data => {
+    const container = document.getElementById("shorts");
+    data.videos.forEach(v => {
+      const div = document.createElement("div");
+      div.className = "shorts-item";
+      div.innerHTML = `
+        <iframe
+          src="https://www.youtube.com/embed/${v.videoId}"
+          allowfullscreen
+          loading="lazy">
+        </iframe>`;
+      container.appendChild(div);
+    });
+  });
+</script>
+</body>
+</html>
