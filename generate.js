@@ -4,6 +4,8 @@ const fs = require("fs");
 const API_KEY = process.env.YOUTUBE_API_KEY;
 const CHANNEL_ID = "UC7WTGZV5NNPCLJH9wc8e0xQ";
 
+const MAX_DURATION = 300; // 5分（秒）
+
 function parseDuration(iso) {
   if (!iso || typeof iso !== "string") return Infinity;
 
@@ -16,14 +18,13 @@ function parseDuration(iso) {
          (s ? +s[1] : 0);
 }
 
-
 (async () => {
   try {
-    // ① search：候補を広く取得（信用しない）
+    // ① search：Shorts寄り動画を広めに取得（一次フィルタ）
     const searchUrl =
       "https://www.googleapis.com/youtube/v3/search?" +
       `part=snippet&channelId=${CHANNEL_ID}` +
-      "&order=date&type=video&maxResults=15" +
+      "&order=date&type=video&videoDuration=short&maxResults=15" +
       `&key=${API_KEY}`;
 
     const searchRes = await fetch(searchUrl);
@@ -42,7 +43,7 @@ function parseDuration(iso) {
       throw new Error("No video IDs found");
     }
 
-    // ② videos.list：実際の再生時間を取得
+    // ② videos.list：実際の動画時間を取得（二次フィルタ用）
     const videosUrl =
       "https://www.googleapis.com/youtube/v3/videos?" +
       `part=snippet,contentDetails&id=${ids}&key=${API_KEY}`;
@@ -54,13 +55,13 @@ function parseDuration(iso) {
       throw new Error("No items returned from videos API");
     }
 
-    // ③ 2分以内（≤120秒）でフィルタ
+    // ③ 「5分以内」＋ 新しい順 → 4件
     const videos = videosJson.items
       .filter(v =>
-            v.contentDetails &&
-            typeof v.contentDetails.duration === "string" &&
-            parseDuration(v.contentDetails.duration) <= 120
-          )
+        v.contentDetails &&
+        typeof v.contentDetails.duration === "string" &&
+        parseDuration(v.contentDetails.duration) <= MAX_DURATION
+      )
       .sort(
         (a, b) =>
           new Date(b.snippet.publishedAt) -
@@ -68,7 +69,7 @@ function parseDuration(iso) {
       )
       .slice(0, 4);
 
-    // ④ HTML生成（既存CSSそのまま）
+    // ④ HTML生成（CSSはそのまま）
     let html = `<!doctype html>
 <html lang="ja">
 <head>
