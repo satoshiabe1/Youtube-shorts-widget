@@ -5,13 +5,17 @@ const API_KEY = process.env.YOUTUBE_API_KEY;
 const CHANNEL_ID = "UC7WTGZV5NNPCLJH9wc8e0xQ";
 
 function parseDuration(iso) {
+  if (!iso || typeof iso !== "string") return Infinity;
+
   const h = iso.match(/(\d+)H/);
   const m = iso.match(/(\d+)M/);
   const s = iso.match(/(\d+)S/);
+
   return (h ? +h[1] * 3600 : 0) +
-         (m ? +h[1] * 60 : 0) +
+         (m ? +m[1] * 60 : 0) +
          (s ? +s[1] : 0);
 }
+
 
 (async () => {
   try {
@@ -52,7 +56,11 @@ function parseDuration(iso) {
 
     // ③ 2分以内（≤120秒）でフィルタ
     const videos = videosJson.items
-      .filter(v => parseDuration(v.contentDetails.duration) <= 120)
+      .filter(v =>
+            v.contentDetails &&
+            typeof v.contentDetails.duration === "string" &&
+            parseDuration(v.contentDetails.duration) <= 120
+          )
       .sort(
         (a, b) =>
           new Date(b.snippet.publishedAt) -
