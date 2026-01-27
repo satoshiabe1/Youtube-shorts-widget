@@ -2,7 +2,7 @@ name: Update Shorts
 
 on:
   schedule:
-    - cron: "0 22 * * *" # JST 7:00
+  - cron: "0 1 * * *" # UTC 01:00（JST 10:00）
   workflow_dispatch:
 
 jobs:
