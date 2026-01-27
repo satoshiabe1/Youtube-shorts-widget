@@ -4,27 +4,63 @@ const fs = require("fs");
 const API_KEY = process.env.YOUTUBE_API_KEY;
 const CHANNEL_ID = "UC7WTGZV5NNPCLJH9wc8e0xQ";
 
-// 🔹 あえて多めに取得
-const url =
-  "https://www.googleapis.com/youtube/v3/search?" +
-  `part=snippet&channelId=${CHANNEL_ID}` +
-  "&order=date&type=video&videoDuration=short&maxResults=10" +
-  `&key=${API_KEY}`;
+function parseDuration(iso) {
+  const h = iso.match(/(\d+)H/);
+  const m = iso.match(/(\d+)M/);
+  const s = iso.match(/(\d+)S/);
+  return (h ? +h[1] * 3600 : 0) +
+         (m ? +h[1] * 60 : 0) +
+         (s ? +s[1] : 0);
+}
 
-fetch(url)
-  .then(res => res.json())
-  .then(json => {
-    if (!json.items || !Array.isArray(json.items)) {
-      console.error("No items returned from API", json);
-      process.exit(1);
+(async () => {
+  try {
+    // ① search：候補を広く取得（信用しない）
+    const searchUrl =
+      "https://www.googleapis.com/youtube/v3/search?" +
+      `part=snippet&channelId=${CHANNEL_ID}` +
+      "&order=date&type=video&maxResults=15" +
+      `&key=${API_KEY}`;
+
+    const searchRes = await fetch(searchUrl);
+    const searchJson = await searchRes.json();
+
+    if (!searchJson.items || !Array.isArray(searchJson.items)) {
+      throw new Error("No items returned from search API");
     }
 
-    // 🔹 videoId があるものだけ抽出 → 4件に制限
-    const videos = json.items
+    const ids = searchJson.items
       .filter(v => v.id && v.id.videoId)
+      .map(v => v.id.videoId)
+      .join(",");
+
+    if (!ids) {
+      throw new Error("No video IDs found");
+    }
+
+    // ② videos.list：実際の再生時間を取得
+    const videosUrl =
+      "https://www.googleapis.com/youtube/v3/videos?" +
+      `part=snippet,contentDetails&id=${ids}&key=${API_KEY}`;
+
+    const videosRes = await fetch(videosUrl);
+    const videosJson = await videosRes.json();
+
+    if (!videosJson.items || !Array.isArray(videosJson.items)) {
+      throw new Error("No items returned from videos API");
+    }
+
+    // ③ 2分以内（≤120秒）でフィルタ
+    const videos = videosJson.items
+      .filter(v => parseDuration(v.contentDetails.duration) <= 120)
+      .sort(
+        (a, b) =>
+          new Date(b.snippet.publishedAt) -
+          new Date(a.snippet.publishedAt)
+      )
       .slice(0, 4);
 
-    // 🔹 CSS込みHTML（毎回完全生成）
+    // ④ HTML生成（既存CSSそのまま）
     let html = `<!doctype html>
 <html lang="ja">
 <head>
@@ -92,7 +128,7 @@ body { margin:0; padding:0; background: transparent; }
       html += `
   <div class="shorts-item">
     <iframe
-      src="https://www.youtube.com/embed/${v.id.videoId}"
+      src="https://www.youtube.com/embed/${v.id}"
       allowfullscreen
       loading="lazy">
     </iframe>
@@ -106,8 +142,9 @@ body { margin:0; padding:0; background: transparent; }
 
     fs.writeFileSync("shorts.html", html);
     console.log(`shorts.html generated (${videos.length} videos)`);
-  })
-  .catch(err => {
-    console.error("Error fetching YouTube data:", err);
+
+  } catch (err) {
+    console.error("Error:", err);
     process.exit(1);
-  });
+  }
+})();
