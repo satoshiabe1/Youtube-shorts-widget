@@ -56,12 +56,22 @@ function parseDuration(iso) {
     }
 
     // ③ 「5分以内」＋ 新しい順 → 4件
-    const videos = videosJson.items
-      .filter(v =>
-        v.contentDetails &&
-        typeof v.contentDetails.duration === "string" &&
-        parseDuration(v.contentDetails.duration) <= MAX_DURATION
-      )
+    //const videos = videosJson.items
+    //  .filter(v =>
+    //   v.contentDetails &&
+    //  typeof v.contentDetails.duration === "string" &&
+    // parseDuration(v.contentDetails.duration) <= MAX_DURATION
+    //)
+      const videos = videosJson.items
+        // 🔴 LIVE / 予定配信を除外
+        .filter(v => v.snippet.liveBroadcastContent === "none")
+        // 🔴 再生時間フィルタ
+        .filter(v =>
+          v.contentDetails &&
+          typeof v.contentDetails.duration === "string" &&
+          parseDuration(v.contentDetails.duration) <= MAX_DURATION
+        )
+
       .sort(
         (a, b) =>
           new Date(b.snippet.publishedAt) -
